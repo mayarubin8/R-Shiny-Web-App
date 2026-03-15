@@ -53,12 +53,286 @@ demo_choices <- c(
   "iris (Fisher's Iris)"         = "iris"
 )
 
+# ---- Custom CSS --------------------------------------------------------------
+custom_css <- "
+/* ---- Global ---- */
+body {
+  background-color: #f5f7fa;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* ---- Navbar ---- */
+.navbar {
+  background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%) !important;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  padding: 0.5rem 1rem;
+}
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1.3rem;
+  letter-spacing: 0.5px;
+}
+.navbar .nav-link {
+  color: rgba(255,255,255,0.85) !important;
+  font-weight: 500;
+  transition: color 0.2s ease, background 0.2s ease;
+  border-radius: 6px;
+  margin: 0 2px;
+  padding: 0.5rem 1rem !important;
+}
+.navbar .nav-link:hover,
+.navbar .nav-link.active {
+  color: #fff !important;
+  background: rgba(255,255,255,0.15);
+}
+
+/* ---- Hero / Welcome ---- */
+.hero-banner {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 16px;
+  padding: 3rem 2rem;
+  margin-bottom: 2rem;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(102, 126, 234, 0.3);
+}
+.hero-banner h1 {
+  font-weight: 800;
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+.hero-banner .lead {
+  color: rgba(255,255,255,0.9);
+  font-size: 1.15rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* ---- Step Cards ---- */
+.step-card {
+  border: none;
+  border-radius: 14px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  overflow: hidden;
+  height: 100%;
+}
+.step-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+.step-icon-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: white;
+  flex-shrink: 0;
+}
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 1.25rem 1.25rem 0.75rem;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+.step-body {
+  padding: 0 1.25rem 1.25rem;
+  font-size: 0.92rem;
+  color: #555;
+}
+.step-body ul {
+  padding-left: 1.1rem;
+  margin-bottom: 0;
+}
+.step-body li {
+  margin-bottom: 0.3rem;
+}
+
+/* ---- Tips Card ---- */
+.tips-card {
+  border: none;
+  border-radius: 14px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+  background: white;
+}
+.tips-card .card-header {
+  background: transparent;
+  border-bottom: 1px solid #eee;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #333;
+}
+
+/* ---- Data Loading ---- */
+.upload-section {
+  background: white;
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+  height: 100%;
+}
+.upload-section h4 {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+.upload-section hr {
+  border-color: #eee;
+}
+.section-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #aaa;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 1.25rem 0;
+}
+.section-divider::before,
+.section-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #e0e0e0;
+}
+.section-divider::before { margin-right: 0.75rem; }
+.section-divider::after  { margin-left: 0.75rem; }
+
+/* ---- Value Boxes ---- */
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 1rem;
+}
+.stat-box {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 0.75rem;
+  text-align: center;
+  border: 1px solid #e9ecef;
+}
+.stat-box .stat-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #2c3e50;
+  display: block;
+}
+.stat-box .stat-label {
+  font-size: 0.75rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ---- Status Banners ---- */
+.status-banner {
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+  margin-bottom: 1.25rem;
+}
+.status-info {
+  background: #eef2ff;
+  color: #4361ee;
+  border: 1px solid #c7d2fe;
+}
+.status-success {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+/* ---- Data Preview Card ---- */
+.preview-card {
+  background: white;
+  border-radius: 14px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+  padding: 1.5rem;
+}
+.preview-card h5 {
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+/* ---- Placeholder Tabs ---- */
+.placeholder-tab {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+.placeholder-tab .placeholder-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #eef2ff;
+  color: #667eea;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+.placeholder-tab h3 {
+  font-weight: 700;
+  color: #333;
+}
+.placeholder-tab p {
+  color: #888;
+  max-width: 500px;
+  margin: 0.5rem auto;
+}
+
+/* ---- Footer ---- */
+.app-footer {
+  text-align: center;
+  padding: 1.5rem;
+  margin-top: 3rem;
+  color: #aaa;
+  font-size: 0.85rem;
+  border-top: 1px solid #e9ecef;
+}
+
+/* ---- Button polish ---- */
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  padding: 0.6rem 1.25rem;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* ---- File input polish ---- */
+.form-control, .shiny-input-container .form-control {
+  border-radius: 8px;
+  border: 1.5px solid #dee2e6;
+}
+.form-control:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+"
+
 # =============================================================================
 # UI
 # =============================================================================
 ui <- navbarPage(
-  title = "Data Explorer",
+  title = span(icon("chart-line"), " Data Explorer"),
   theme = bs_theme(version = 5, bootswatch = "flatly"),
+  header = tags$head(tags$style(HTML(custom_css))),
 
   # ============================================================
   # TAB 1: USER GUIDE (Student 1)
@@ -67,88 +341,96 @@ ui <- navbarPage(
     "User Guide",
     icon = icon("book"),
     fluidPage(
-      class = "mt-4",
+      class = "mt-4 px-3",
 
-      # Welcome header
+      # Hero banner
       div(
-        class = "text-center mb-4",
+        class = "hero-banner",
         h1("Welcome to Data Explorer"),
-        p(class = "lead text-muted",
-          "An interactive tool for uploading, cleaning, engineering,
-           and exploring your datasets — all in one place.")
+        p(class = "lead",
+          "Upload, clean, transform, and visualize your datasets
+           — all from one interactive dashboard.")
       ),
 
-      # Step-by-step guide cards
-      layout_column_wrap(
-        width = 1 / 2,
-        fill = FALSE,
-
-        card(
-          card_header(
-            class = "bg-primary text-white",
-            span(icon("upload"), " Step 1: Load Your Data")
-          ),
-          card_body(
-            p("Head to the", strong("Data Loading"), "tab to get started."),
-            tags$ul(
-              tags$li("Upload your own file in CSV, Excel (.xlsx/.xls),
-                       JSON, or RDS format (up to 30 MB)."),
-              tags$li("Or select a built-in demo dataset (mtcars or iris)
-                       to explore the app right away."),
-              tags$li("A preview table will appear so you can verify
-                       your data loaded correctly.")
+      # Step cards
+      fluidRow(
+        # Step 1
+        column(6, class = "mb-4",
+          div(class = "step-card",
+            div(class = "step-header",
+              span(class = "step-icon-circle",
+                   style = "background: linear-gradient(135deg, #4361ee, #3a86ff);",
+                   icon("upload")),
+              span("Step 1: Load Your Data")
+            ),
+            div(class = "step-body",
+              p("Head to the", strong("Data Loading"), "tab to get started."),
+              tags$ul(
+                tags$li("Upload CSV, Excel (.xlsx/.xls), JSON, or RDS files (up to 30 MB)."),
+                tags$li("Or pick a built-in demo dataset to explore the app instantly."),
+                tags$li("Preview your data in an interactive, searchable table.")
+              )
             )
           )
         ),
 
-        card(
-          card_header(
-            class = "bg-success text-white",
-            span(icon("broom"), " Step 2: Clean & Preprocess")
-          ),
-          card_body(
-            p("Use the", strong("Data Cleaning"), "tab to prepare your data."),
-            tags$ul(
-              tags$li("Handle missing values (drop rows or impute
-                       with mean / median / mode)."),
-              tags$li("Remove duplicate rows."),
-              tags$li("Scale or normalize numeric columns."),
-              tags$li("Encode categorical variables
-                       (one-hot or label encoding)."),
-              tags$li("Detect and handle outliers.")
+        # Step 2
+        column(6, class = "mb-4",
+          div(class = "step-card",
+            div(class = "step-header",
+              span(class = "step-icon-circle",
+                   style = "background: linear-gradient(135deg, #059669, #34d399);",
+                   icon("broom")),
+              span("Step 2: Clean & Preprocess")
+            ),
+            div(class = "step-body",
+              p("Use the", strong("Data Cleaning"), "tab to prepare your data."),
+              tags$ul(
+                tags$li("Handle missing values with drop or imputation strategies."),
+                tags$li("Remove duplicate rows and standardize formats."),
+                tags$li("Scale, normalize, and encode categorical variables."),
+                tags$li("Detect and handle outliers.")
+              )
             )
           )
         ),
 
-        card(
-          card_header(
-            class = "bg-warning text-dark",
-            span(icon("wrench"), " Step 3: Engineer Features")
-          ),
-          card_body(
-            p("Visit the", strong("Feature Engineering"), "tab to create
-               new variables."),
-            tags$ul(
-              tags$li("Build new columns from math expressions,
-                       binning, or interactions."),
-              tags$li("Rename or drop existing columns."),
-              tags$li("See before-and-after previews of your changes.")
+        # Step 3
+        column(6, class = "mb-4",
+          div(class = "step-card",
+            div(class = "step-header",
+              span(class = "step-icon-circle",
+                   style = "background: linear-gradient(135deg, #f59e0b, #fbbf24);",
+                   icon("wrench")),
+              span("Step 3: Engineer Features")
+            ),
+            div(class = "step-body",
+              p("Visit the", strong("Feature Engineering"), "tab to create new variables."),
+              tags$ul(
+                tags$li("Build new columns from math expressions, binning, or interactions."),
+                tags$li("Rename or drop existing columns."),
+                tags$li("See before-and-after previews of every change.")
+              )
             )
           )
         ),
 
-        card(
-          card_header(
-            class = "bg-info text-white",
-            span(icon("chart-bar"), " Step 4: Explore & Visualize")
-          ),
-          card_body(
-            p("Go to the", strong("EDA"), "tab to understand your data."),
-            tags$ul(
-              tags$li("View summary statistics and correlation matrices."),
-              tags$li("Create interactive plots — histograms, boxplots,
-                       scatter plots, and more."),
-              tags$li("Filter and subset your data dynamically.")
+        # Step 4
+        column(6, class = "mb-4",
+          div(class = "step-card",
+            div(class = "step-header",
+              span(class = "step-icon-circle",
+                   style = "background: linear-gradient(135deg, #8b5cf6, #a78bfa);",
+                   icon("chart-bar")),
+              span("Step 4: Explore & Visualize")
+            ),
+            div(class = "step-body",
+              p("Go to the", strong("EDA"), "tab to uncover insights."),
+              tags$ul(
+                tags$li("View summary statistics and correlation matrices."),
+                tags$li("Create interactive plots — histograms, boxplots, scatter plots, and more."),
+                tags$li("Filter and subset your data dynamically.")
+              )
             )
           )
         )
@@ -156,7 +438,7 @@ ui <- navbarPage(
 
       # Tips section
       card(
-        class = "mt-3",
+        class = "tips-card mt-2",
         card_header(
           span(icon("lightbulb"), " Tips for Best Results")
         ),
@@ -165,9 +447,14 @@ ui <- navbarPage(
             tags$li("Start with the", strong("Data Loading"), "tab — all other
                      tabs depend on having a dataset loaded."),
             tags$li("Work through the tabs left to right:
-                     Load \u2192 Clean \u2192 Engineer \u2192 Explore."),
+                     Load \u2192 Clean \u2192 Engineer \u2192 Explore.")
           )
         )
+      ),
+
+      # Footer
+      div(class = "app-footer",
+        "Data Explorer \u2014 Applied Data Science, Spring 2026"
       )
     )
   ),
@@ -178,45 +465,53 @@ ui <- navbarPage(
   tabPanel(
     "Data Loading",
     icon = icon("upload"),
-    sidebarLayout(
+    fluidPage(
+      class = "mt-4 px-3",
 
-      # -- Sidebar: upload controls --
-      sidebarPanel(
-        width = 3,
+      fluidRow(
+        # Left column: upload controls
+        column(3,
+          div(class = "upload-section",
+            h4(icon("file-arrow-up"), " Upload a File"),
+            fileInput(
+              "file_upload", NULL,
+              accept = c(".csv", ".xlsx", ".xls", ".json", ".rds"),
+              placeholder = "CSV, Excel, JSON, or RDS"
+            ),
+            helpText("Supported: .csv, .xlsx, .xls, .json, .rds",
+                     br(), "Max size: 30 MB"),
 
-        h4("Upload a File"),
-        fileInput(
-          "file_upload", NULL,
-          accept = c(".csv", ".xlsx", ".xls", ".json", ".rds"),
-          placeholder = "CSV, Excel, JSON, or RDS"
+            div(class = "section-divider", "OR"),
+
+            h4(icon("database"), " Demo Dataset"),
+            selectInput(
+              "demo_data", NULL,
+              choices = demo_choices
+            ),
+            actionButton(
+              "load_demo", "Load Demo Dataset",
+              class = "btn-primary w-100",
+              icon = icon("play")
+            ),
+
+            # Dataset summary (value boxes, shown after data is loaded)
+            uiOutput("data_summary_panel")
+          )
         ),
-        helpText("Supported formats: .csv, .xlsx, .xls, .json, .rds",
-                 br(), "Max file size: 30 MB"),
 
-        hr(),
-
-        h4("Or Use a Demo Dataset"),
-        selectInput(
-          "demo_data", NULL,
-          choices = demo_choices
-        ),
-        actionButton(
-          "load_demo", "Load Demo Dataset",
-          class = "btn-primary w-100",
-          icon = icon("database")
-        ),
-
-        hr(),
-
-        # Dataset summary (shown after data is loaded)
-        uiOutput("data_summary_panel")
+        # Right column: status + data preview
+        column(9,
+          uiOutput("load_status"),
+          div(class = "preview-card",
+            h5(icon("table"), " Data Preview"),
+            DTOutput("data_preview")
+          )
+        )
       ),
 
-      # -- Main panel: data preview --
-      mainPanel(
-        width = 9,
-        uiOutput("load_status"),
-        DTOutput("data_preview")
+      # Footer
+      div(class = "app-footer",
+        "Data Explorer \u2014 Applied Data Science, Spring 2026"
       )
     )
   ),
@@ -230,11 +525,14 @@ ui <- navbarPage(
     "Data Cleaning",
     icon = icon("broom"),
     fluidPage(
-      class = "mt-4 text-center text-muted",
-      h3("Data Cleaning & Preprocessing"),
-      p("This tab will be implemented by Student 2."),
-      p("It will include: missing value handling, duplicate removal,
-         scaling/normalization, categorical encoding, and outlier handling.")
+      class = "mt-4",
+      div(class = "placeholder-tab",
+        div(class = "placeholder-icon", icon("broom")),
+        h3("Data Cleaning & Preprocessing"),
+        p("This tab will be implemented by Student 2."),
+        p("It will include: missing value handling, duplicate removal,
+           scaling/normalization, categorical encoding, and outlier handling.")
+      )
     )
   ),
 
@@ -247,11 +545,14 @@ ui <- navbarPage(
     "Feature Engineering",
     icon = icon("wrench"),
     fluidPage(
-      class = "mt-4 text-center text-muted",
-      h3("Feature Engineering"),
-      p("This tab will be implemented by Student 3."),
-      p("It will include: creating new features, renaming/dropping columns,
-         and before/after visual feedback.")
+      class = "mt-4",
+      div(class = "placeholder-tab",
+        div(class = "placeholder-icon", icon("wrench")),
+        h3("Feature Engineering"),
+        p("This tab will be implemented by Student 3."),
+        p("It will include: creating new features, renaming/dropping columns,
+           and before/after visual feedback.")
+      )
     )
   ),
 
@@ -263,11 +564,14 @@ ui <- navbarPage(
     "EDA",
     icon = icon("chart-bar"),
     fluidPage(
-      class = "mt-4 text-center text-muted",
-      h3("Exploratory Data Analysis"),
-      p("This tab will be implemented by Students 3 & 4."),
-      p("It will include: summary statistics, correlation matrix,
-         interactive plots, and dynamic filtering.")
+      class = "mt-4",
+      div(class = "placeholder-tab",
+        div(class = "placeholder-icon", icon("chart-bar")),
+        h3("Exploratory Data Analysis"),
+        p("This tab will be implemented by Students 3 & 4."),
+        p("It will include: summary statistics, correlation matrix,
+           interactive plots, and dynamic filtering.")
+      )
     )
   )
 )
@@ -343,23 +647,23 @@ server <- function(input, output, session) {
   output$load_status <- renderUI({
     if (is.null(current_data())) {
       div(
-        class = "alert alert-info mt-3",
+        class = "status-banner status-info",
         icon("info-circle"),
-        " No dataset loaded yet. Upload a file or select a demo dataset
-          from the sidebar to get started."
+        span("No dataset loaded yet. Upload a file or select a demo dataset
+              from the sidebar to get started.")
       )
     } else {
       div(
-        class = "alert alert-success mt-3",
+        class = "status-banner status-success",
         icon("check-circle"),
-        paste0(" Dataset loaded: ", data_name(),
+        span(paste0("Dataset loaded: ", data_name(),
                " \u2014 ", nrow(current_data()), " rows, ",
-               ncol(current_data()), " columns")
+               ncol(current_data()), " columns"))
       )
     }
   })
 
-  # ---- DATA LOADING: Summary panel in sidebar --------------------------------
+  # ---- DATA LOADING: Summary panel — value boxes -----------------------------
   output$data_summary_panel <- renderUI({
     req(current_data())
     df <- current_data()
@@ -370,15 +674,29 @@ server <- function(input, output, session) {
     missing <- sum(is.na(df))
 
     tagList(
-      h5("Dataset Summary"),
-      tags$table(
-        class = "table table-sm table-borderless",
-        tags$tr(tags$td("Rows:"),        tags$td(strong(nrow(df)))),
-        tags$tr(tags$td("Columns:"),     tags$td(strong(ncol(df)))),
-        tags$tr(tags$td("Numeric:"),     tags$td(num_cols)),
-        tags$tr(tags$td("Character:"),   tags$td(char_cols)),
-        tags$tr(tags$td("Factor:"),      tags$td(factor_cols)),
-        tags$tr(tags$td("Missing vals:"),tags$td(missing))
+      hr(),
+      h4(icon("chart-pie"), " Summary"),
+      div(class = "stat-grid",
+        div(class = "stat-box",
+          span(class = "stat-value", nrow(df)),
+          span(class = "stat-label", "Rows")
+        ),
+        div(class = "stat-box",
+          span(class = "stat-value", ncol(df)),
+          span(class = "stat-label", "Columns")
+        ),
+        div(class = "stat-box",
+          span(class = "stat-value", num_cols),
+          span(class = "stat-label", "Numeric")
+        ),
+        div(class = "stat-box",
+          span(class = "stat-value", char_cols + factor_cols),
+          span(class = "stat-label", "Categorical")
+        ),
+        div(class = "stat-box",
+          span(class = "stat-value", missing),
+          span(class = "stat-label", "Missing")
+        )
       )
     )
   })
