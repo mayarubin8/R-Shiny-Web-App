@@ -723,7 +723,96 @@ server <- function(input, output, session) {
   # Use current_data() to read the active dataset.
   # Update with current_data(cleaned_df) after cleaning.
   # ============================================================
+cleaned_data <- reactive({
 
+  req(current_data())
+  df <- current_data()
+
+  # ---- 1. Missing Values ------------------------------------
+  if (!is.null(input$missing_method) && input$missing_method != "None") {
+
+    if (input$missing_method == "Drop") {
+      df <- na.omit(df)
+
+    } else if (input$missing_method == "Mean") {
+      num_cols <- sapply(df, is.numeric)
+      df[num_cols] <- lapply(df[num_cols], function(x) {
+        x[is.na(x)] <- mean(x, na.rm = TRUE)
+        x
+      })
+
+    } else if (input$missing_method == "Median") {
+      num_cols <- sapply(df, is.numeric)
+      df[num_cols] <- lapply(df[num_cols], function(x) {
+        x[is.na(x)] <- median(x, na.rm = TRUE)
+        x
+      })
+
+    } else if (input$missing_method == "Mode") {
+      mode_func <- function(x) {
+        ux <- na.omit(unique(x))
+        ux[which.max(tabulate(match(x, ux)))]
+      }
+      df[] <- lapply(df, function(x) {
+        x[is.na(x)] <- mode_func(x)
+        x
+      })
+    }
+  }
+
+  # ---- 2. Remove Duplicates ---------------------------------
+  if (!is.null(input$remove_dup) && input$remove_dup) {
+    df <- unique(df)
+  }
+
+  # ---- 3. Scaling / Normalization ----------------------------
+  if (!is.null(input$scaling) && input$scaling != "None") {
+    num_cols <- sapply(df, is.numeric)
+
+    if (input$scaling == "Standardize") {
+      df[num_cols] <- scale(df[num_cols])
+
+    } else if (input$scaling == "Normalize") {
+      df[num_cols] <- lapply(df[num_cols], function(x) {
+        (x - min(x, na.rm = TRUE)) / 
+        (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))
+      })
+    }
+  }
+
+  # ---- 4. Encoding ------------------------------------------
+  if (!is.null(input$encoding) && input$encoding != "None") {
+
+    if (input$encoding == "Label") {
+      df[] <- lapply(df, function(x) {
+        if (is.character(x) || is.factor(x)) {
+          as.numeric(as.factor(x))
+        } else {
+          x
+        }
+      })
+
+    } else if (input$encoding == "One-hot") {
+      df <- as.data.frame(model.matrix(~ . - 1, data = df))
+    }
+  }
+
+  # ---- 5. Outliers ------------------------------------------
+  if (!is.null(input$remove_outliers) && input$remove_outliers) {
+    num_cols <- sapply(df, is.numeric)
+
+    for (col in names(df)[num_cols]) {
+      Q1 <- quantile(df[[col]], 0.25, na.rm = TRUE)
+      Q3 <- quantile(df[[col]], 0.75, na.rm = TRUE)
+      IQR_val <- Q3 - Q1
+
+      df <- df[df[[col]] >= (Q1 - 1.5 * IQR_val) &
+               df[[col]] <= (Q3 + 1.5 * IQR_val), ]
+    }
+  }
+
+  return(df)
+})
 
   # ============================================================
   # FEATURE ENGINEERING SERVER LOGIC (Student 3)
