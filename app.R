@@ -521,20 +521,35 @@ ui <- navbarPage(
   # Access the shared dataset via current_data()
   # Update with current_data(cleaned_df)
   # ============================================================
-  tabPanel(
-    "Data Cleaning",
-    icon = icon("broom"),
-    fluidPage(
-      class = "mt-4",
-      div(class = "placeholder-tab",
-        div(class = "placeholder-icon", icon("broom")),
-        h3("Data Cleaning & Preprocessing"),
-        p("This tab will be implemented by Student 2."),
-        p("It will include: missing value handling, duplicate removal,
-           scaling/normalization, categorical encoding, and outlier handling.")
-      )
+ tabPanel(
+  "Data Cleaning",
+  icon = icon("broom"),
+
+  sidebarLayout(
+
+    sidebarPanel(
+      h4("Cleaning Options"),
+
+      selectInput("missing_method", "Handle Missing Values:",
+                  choices = c("None", "Drop", "Mean", "Median", "Mode")),
+
+      checkboxInput("remove_dup", "Remove duplicates"),
+
+      selectInput("scaling", "Scaling:",
+                  choices = c("None", "Standardize", "Normalize")),
+
+      selectInput("encoding", "Encoding:",
+                  choices = c("None", "Label", "One-hot")),
+
+      checkboxInput("remove_outliers", "Remove Outliers")
+    ),
+
+    mainPanel(
+      h4("Cleaned Data Preview"),
+      DTOutput("cleaned_preview")
     )
-  ),
+  )
+),
 
   # ============================================================
   # TAB 4: FEATURE ENGINEERING (Student 3)
