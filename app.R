@@ -2,11 +2,8 @@
 # Project 2: Data Explorer — R Shiny Web Application
 # =============================================================================
 # Student 1: App Skeleton, Data Loading, User Guide
-#
-# SHARED REACTIVE DATA:
-#   current_data()  — reactiveVal holding the active dataset (data.frame or NULL)
-#   Read with:       current_data()
-#   Update with:     current_data(new_df)
+# Student 2: Data Cleaning
+# Student 3: Feature Engineering + EDA summary/correlation
 # =============================================================================
 
 # ---- Packages ----------------------------------------------------------------
@@ -24,44 +21,41 @@ options(shiny.maxRequestSize = 30 * 1024^2)  # 30 MB upload limit
 read_uploaded_file <- function(file_path, file_name) {
   ext <- tolower(file_ext(file_name))
   switch(ext,
-    "csv"  = read.csv(file_path, stringsAsFactors = FALSE),
-    "xlsx" = as.data.frame(read_excel(file_path)),
-    "xls"  = as.data.frame(read_excel(file_path)),
-    "json" = {
-      result <- fromJSON(file_path, flatten = TRUE)
-      if (!is.data.frame(result)) {
-        stop("JSON file must contain a flat array of objects (tabular data).")
-      }
-      result
-    },
-    "rds"  = {
-      result <- readRDS(file_path)
-      if (!is.data.frame(result)) {
-        stop("RDS file must contain a data.frame.")
-      }
-      result
-    },
-    stop(paste0("Unsupported file format: .", ext,
-                ". Please upload CSV, Excel, JSON, or RDS."))
+         "csv"  = read.csv(file_path, stringsAsFactors = FALSE),
+         "xlsx" = as.data.frame(read_excel(file_path)),
+         "xls"  = as.data.frame(read_excel(file_path)),
+         "json" = {
+           result <- fromJSON(file_path, flatten = TRUE)
+           if (!is.data.frame(result)) {
+             stop("JSON file must contain a flat array of objects (tabular data).")
+           }
+           result
+         },
+         "rds"  = {
+           result <- readRDS(file_path)
+           if (!is.data.frame(result)) {
+             stop("RDS file must contain a data.frame.")
+           }
+           result
+         },
+         stop(paste0("Unsupported file format: .", ext,
+                     ". Please upload CSV, Excel, JSON, or RDS."))
   )
 }
 
 # ---- Demo dataset choices ----------------------------------------------------
 demo_choices <- c(
   "Select a dataset..." = "none",
-  "mtcars (Motor Trend Cars)"    = "mtcars",
-  "iris (Fisher's Iris)"         = "iris"
+  "mtcars (Motor Trend Cars)" = "mtcars",
+  "iris (Fisher's Iris)" = "iris"
 )
 
 # ---- Custom CSS --------------------------------------------------------------
 custom_css <- "
-/* ---- Global ---- */
 body {
   background-color: #f5f7fa;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
-
-/* ---- Navbar ---- */
 .navbar {
   background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%) !important;
   box-shadow: 0 2px 12px rgba(0,0,0,0.15);
@@ -85,8 +79,6 @@ body {
   color: #fff !important;
   background: rgba(255,255,255,0.15);
 }
-
-/* ---- Hero / Welcome ---- */
 .hero-banner {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -107,8 +99,6 @@ body {
   max-width: 600px;
   margin: 0 auto;
 }
-
-/* ---- Step Cards ---- */
 .step-card {
   border: none;
   border-radius: 14px;
@@ -116,6 +106,7 @@ body {
   transition: transform 0.25s ease, box-shadow 0.25s ease;
   overflow: hidden;
   height: 100%;
+  background: white;
 }
 .step-card:hover {
   transform: translateY(-4px);
@@ -152,8 +143,6 @@ body {
 .step-body li {
   margin-bottom: 0.3rem;
 }
-
-/* ---- Tips Card ---- */
 .tips-card {
   border: none;
   border-radius: 14px;
@@ -167,8 +156,6 @@ body {
   font-size: 1.05rem;
   color: #333;
 }
-
-/* ---- Data Loading ---- */
 .upload-section {
   background: white;
   border-radius: 14px;
@@ -202,8 +189,6 @@ body {
 }
 .section-divider::before { margin-right: 0.75rem; }
 .section-divider::after  { margin-left: 0.75rem; }
-
-/* ---- Value Boxes ---- */
 .stat-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -229,8 +214,6 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
-
-/* ---- Status Banners ---- */
 .status-banner {
   border-radius: 12px;
   padding: 1rem 1.25rem;
@@ -250,8 +233,6 @@ body {
   color: #059669;
   border: 1px solid #a7f3d0;
 }
-
-/* ---- Data Preview Card ---- */
 .preview-card {
   background: white;
   border-radius: 14px;
@@ -263,8 +244,6 @@ body {
   color: #2c3e50;
   margin-bottom: 1rem;
 }
-
-/* ---- Placeholder Tabs ---- */
 .placeholder-tab {
   text-align: center;
   padding: 4rem 2rem;
@@ -290,8 +269,6 @@ body {
   max-width: 500px;
   margin: 0.5rem auto;
 }
-
-/* ---- Footer ---- */
 .app-footer {
   text-align: center;
   padding: 1.5rem;
@@ -300,8 +277,6 @@ body {
   font-size: 0.85rem;
   border-top: 1px solid #e9ecef;
 }
-
-/* ---- Button polish ---- */
 .btn-primary {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: none;
@@ -314,8 +289,6 @@ body {
   opacity: 0.9;
   transform: translateY(-1px);
 }
-
-/* ---- File input polish ---- */
 .form-control, .shiny-input-container .form-control {
   border-radius: 8px;
   border: 1.5px solid #dee2e6;
@@ -333,259 +306,250 @@ ui <- navbarPage(
   title = span(icon("chart-line"), " Data Explorer"),
   theme = bs_theme(version = 5, bootswatch = "flatly"),
   header = tags$head(tags$style(HTML(custom_css))),
-
-  # ============================================================
-  # TAB 1: USER GUIDE (Student 1)
-  # ============================================================
+  
   tabPanel(
     "User Guide",
     icon = icon("book"),
     fluidPage(
       class = "mt-4 px-3",
-
-      # Hero banner
       div(
         class = "hero-banner",
         h1("Welcome to Data Explorer"),
         p(class = "lead",
-          "Upload, clean, transform, and visualize your datasets
-           — all from one interactive dashboard.")
+          "Upload, clean, transform, and visualize your datasets — all from one interactive dashboard.")
       ),
-
-      # Step cards
       fluidRow(
-        # Step 1
         column(6, class = "mb-4",
-          div(class = "step-card",
-            div(class = "step-header",
-              span(class = "step-icon-circle",
-                   style = "background: linear-gradient(135deg, #4361ee, #3a86ff);",
-                   icon("upload")),
-              span("Step 1: Load Your Data")
-            ),
-            div(class = "step-body",
-              p("Head to the", strong("Data Loading"), "tab to get started."),
-              tags$ul(
-                tags$li("Upload CSV, Excel (.xlsx/.xls), JSON, or RDS files (up to 30 MB)."),
-                tags$li("Or pick a built-in demo dataset to explore the app instantly."),
-                tags$li("Preview your data in an interactive, searchable table.")
-              )
-            )
-          )
+               div(class = "step-card",
+                   div(class = "step-header",
+                       span(class = "step-icon-circle",
+                            style = "background: linear-gradient(135deg, #4361ee, #3a86ff);",
+                            icon("upload")),
+                       span("Step 1: Load Your Data")
+                   ),
+                   div(class = "step-body",
+                       p("Head to the ", strong("Data Loading"), " tab to get started."),
+                       tags$ul(
+                         tags$li("Upload CSV, Excel (.xlsx/.xls), JSON, or RDS files (up to 30 MB)."),
+                         tags$li("Or pick a built-in demo dataset to explore the app instantly."),
+                         tags$li("Preview your data in an interactive, searchable table.")
+                       )
+                   ))
         ),
-
-        # Step 2
         column(6, class = "mb-4",
-          div(class = "step-card",
-            div(class = "step-header",
-              span(class = "step-icon-circle",
-                   style = "background: linear-gradient(135deg, #059669, #34d399);",
-                   icon("broom")),
-              span("Step 2: Clean & Preprocess")
-            ),
-            div(class = "step-body",
-              p("Use the", strong("Data Cleaning"), "tab to prepare your data."),
-              tags$ul(
-                tags$li("Handle missing values with drop or imputation strategies."),
-                tags$li("Remove duplicate rows and standardize formats."),
-                tags$li("Scale, normalize, and encode categorical variables."),
-                tags$li("Detect and handle outliers.")
-              )
-            )
-          )
+               div(class = "step-card",
+                   div(class = "step-header",
+                       span(class = "step-icon-circle",
+                            style = "background: linear-gradient(135deg, #059669, #34d399);",
+                            icon("broom")),
+                       span("Step 2: Clean & Preprocess")
+                   ),
+                   div(class = "step-body",
+                       p("Use the ", strong("Data Cleaning"), " tab to prepare your data."),
+                       tags$ul(
+                         tags$li("Handle missing values with drop or imputation strategies."),
+                         tags$li("Remove duplicate rows and standardize formats."),
+                         tags$li("Scale, normalize, and encode categorical variables."),
+                         tags$li("Detect and handle outliers.")
+                       )
+                   ))
         ),
-
-        # Step 3
         column(6, class = "mb-4",
-          div(class = "step-card",
-            div(class = "step-header",
-              span(class = "step-icon-circle",
-                   style = "background: linear-gradient(135deg, #f59e0b, #fbbf24);",
-                   icon("wrench")),
-              span("Step 3: Engineer Features")
-            ),
-            div(class = "step-body",
-              p("Visit the", strong("Feature Engineering"), "tab to create new variables."),
-              tags$ul(
-                tags$li("Build new columns from math expressions, binning, or interactions."),
-                tags$li("Rename or drop existing columns."),
-                tags$li("See before-and-after previews of every change.")
-              )
-            )
-          )
+               div(class = "step-card",
+                   div(class = "step-header",
+                       span(class = "step-icon-circle",
+                            style = "background: linear-gradient(135deg, #f59e0b, #fbbf24);",
+                            icon("wrench")),
+                       span("Step 3: Engineer Features")
+                   ),
+                   div(class = "step-body",
+                       p("Visit the ", strong("Feature Engineering"), " tab to create new variables."),
+                       tags$ul(
+                         tags$li("Build new columns from math expressions, binning, or interactions."),
+                         tags$li("Rename or drop existing columns."),
+                         tags$li("See before-and-after previews of every change.")
+                       )
+                   ))
         ),
-
-        # Step 4
         column(6, class = "mb-4",
-          div(class = "step-card",
-            div(class = "step-header",
-              span(class = "step-icon-circle",
-                   style = "background: linear-gradient(135deg, #8b5cf6, #a78bfa);",
-                   icon("chart-bar")),
-              span("Step 4: Explore & Visualize")
-            ),
-            div(class = "step-body",
-              p("Go to the", strong("EDA"), "tab to uncover insights."),
-              tags$ul(
-                tags$li("View summary statistics and correlation matrices."),
-                tags$li("Create interactive plots — histograms, boxplots, scatter plots, and more."),
-                tags$li("Filter and subset your data dynamically.")
-              )
-            )
-          )
+               div(class = "step-card",
+                   div(class = "step-header",
+                       span(class = "step-icon-circle",
+                            style = "background: linear-gradient(135deg, #8b5cf6, #a78bfa);",
+                            icon("chart-bar")),
+                       span("Step 4: Explore & Visualize")
+                   ),
+                   div(class = "step-body",
+                       p("Go to the ", strong("EDA"), " tab to uncover insights."),
+                       tags$ul(
+                         tags$li("View summary statistics and correlation matrices."),
+                         tags$li("Create interactive plots — histograms, boxplots, scatter plots, and more."),
+                         tags$li("Filter and subset your data dynamically.")
+                       )
+                   ))
         )
       ),
-
-      # Tips section
       card(
         class = "tips-card mt-2",
-        card_header(
-          span(icon("lightbulb"), " Tips for Best Results")
-        ),
+        card_header(span(icon("lightbulb"), " Tips for Best Results")),
         card_body(
           tags$ul(
-            tags$li("Start with the", strong("Data Loading"), "tab — all other
-                     tabs depend on having a dataset loaded."),
-            tags$li("Work through the tabs left to right:
-                     Load \u2192 Clean \u2192 Engineer \u2192 Explore.")
+            tags$li("Start with the ", strong("Data Loading"), " tab — all other tabs depend on having a dataset loaded."),
+            tags$li("Work through the tabs left to right: Load → Clean → Engineer → Explore.")
           )
         )
       ),
-
-      # Footer
-      div(class = "app-footer",
-        "Data Explorer \u2014 Applied Data Science, Spring 2026"
-      )
+      div(class = "app-footer", "Data Explorer — Applied Data Science, Spring 2026")
     )
   ),
-
-  # ============================================================
-  # TAB 2: DATA LOADING (Student 1)
-  # ============================================================
+  
   tabPanel(
     "Data Loading",
     icon = icon("upload"),
     fluidPage(
       class = "mt-4 px-3",
-
       fluidRow(
-        # Left column: upload controls
         column(3,
-          div(class = "upload-section",
-            h4(icon("file-arrow-up"), " Upload a File"),
-            fileInput(
-              "file_upload", NULL,
-              accept = c(".csv", ".xlsx", ".xls", ".json", ".rds"),
-              placeholder = "CSV, Excel, JSON, or RDS"
-            ),
-            helpText("Supported: .csv, .xlsx, .xls, .json, .rds",
-                     br(), "Max size: 30 MB"),
-
-            div(class = "section-divider", "OR"),
-
-            h4(icon("database"), " Demo Dataset"),
-            selectInput(
-              "demo_data", NULL,
-              choices = demo_choices
-            ),
-            actionButton(
-              "load_demo", "Load Demo Dataset",
-              class = "btn-primary w-100",
-              icon = icon("play")
-            ),
-
-            # Dataset summary (value boxes, shown after data is loaded)
-            uiOutput("data_summary_panel")
-          )
+               div(class = "upload-section",
+                   h4(icon("file-arrow-up"), " Upload a File"),
+                   fileInput(
+                     "file_upload", NULL,
+                     accept = c(".csv", ".xlsx", ".xls", ".json", ".rds"),
+                     placeholder = "CSV, Excel, JSON, or RDS"
+                   ),
+                   helpText("Supported: .csv, .xlsx, .xls, .json, .rds", br(), "Max size: 30 MB"),
+                   div(class = "section-divider", "OR"),
+                   h4(icon("database"), " Demo Dataset"),
+                   selectInput("demo_data", NULL, choices = demo_choices),
+                   actionButton("load_demo", "Load Demo Dataset", class = "btn-primary w-100", icon = icon("play")),
+                   uiOutput("data_summary_panel")
+               )
         ),
-
-        # Right column: status + data preview
         column(9,
-          uiOutput("load_status"),
-          div(class = "preview-card",
-            h5(icon("table"), " Data Preview"),
-            DTOutput("data_preview")
-          )
+               uiOutput("load_status"),
+               div(class = "preview-card",
+                   h5(icon("table"), " Data Preview"),
+                   DTOutput("data_preview")
+               )
         )
       ),
-
-      # Footer
-      div(class = "app-footer",
-        "Data Explorer \u2014 Applied Data Science, Spring 2026"
+      div(class = "app-footer", "Data Explorer — Applied Data Science, Spring 2026")
+    )
+  ),
+  
+  tabPanel(
+    "Data Cleaning",
+    icon = icon("broom"),
+    sidebarLayout(
+      sidebarPanel(
+        h4("Cleaning Options"),
+        selectInput("missing_method", "Handle Missing Values:",
+                    choices = c("None", "Drop", "Mean", "Median", "Mode")),
+        checkboxInput("remove_dup", "Remove duplicates"),
+        selectInput("scaling", "Scaling:",
+                    choices = c("None", "Standardize", "Normalize")),
+        selectInput("encoding", "Encoding:",
+                    choices = c("None", "Label", "One-hot")),
+        checkboxInput("remove_outliers", "Remove Outliers")
+      ),
+      mainPanel(
+        h4("Cleaned Data Preview"),
+        DTOutput("cleaned_preview")
       )
     )
   ),
-
-  # ============================================================
-  # TAB 3: DATA CLEANING (Student 2)
-  # Access the shared dataset via current_data()
-  # Update with current_data(cleaned_df)
-  # ============================================================
- tabPanel(
-  "Data Cleaning",
-  icon = icon("broom"),
-
-  sidebarLayout(
-
-    sidebarPanel(
-      h4("Cleaning Options"),
-
-      selectInput("missing_method", "Handle Missing Values:",
-                  choices = c("None", "Drop", "Mean", "Median", "Mode")),
-
-      checkboxInput("remove_dup", "Remove duplicates"),
-
-      selectInput("scaling", "Scaling:",
-                  choices = c("None", "Standardize", "Normalize")),
-
-      selectInput("encoding", "Encoding:",
-                  choices = c("None", "Label", "One-hot")),
-
-      checkboxInput("remove_outliers", "Remove Outliers")
-    ),
-
-    mainPanel(
-      h4("Cleaned Data Preview"),
-      DTOutput("cleaned_preview")
-    )
-  )
-),
-
-  # ============================================================
-  # TAB 4: FEATURE ENGINEERING (Student 3)
-  # Access the shared dataset via current_data()
-  # Update with current_data(engineered_df)
-  # ============================================================
+  
   tabPanel(
     "Feature Engineering",
     icon = icon("wrench"),
-    fluidPage(
-      class = "mt-4",
-      div(class = "placeholder-tab",
-        div(class = "placeholder-icon", icon("wrench")),
-        h3("Feature Engineering"),
-        p("This tab will be implemented by Student 3."),
-        p("It will include: creating new features, renaming/dropping columns,
-           and before/after visual feedback.")
+    sidebarLayout(
+      sidebarPanel(
+        h4("Feature Engineering"),
+        radioButtons(
+          "fe_action",
+          "Choose Action:",
+          choices = c(
+            "Create Math Feature" = "math",
+            "Create Binned Feature" = "bin",
+            "Create Interaction Feature" = "interaction",
+            "Rename Column" = "rename",
+            "Drop Columns" = "drop"
+          ),
+          selected = "math"
+        ),
+        conditionalPanel(
+          condition = "input.fe_action == 'math'",
+          textInput("fe_new_col_math", "New Column Name:", "new_feature"),
+          selectInput("fe_math_col1", "Column 1:", choices = NULL),
+          selectInput("fe_math_operator", "Operator:", choices = c("+", "-", "*", "/")),
+          selectInput("fe_math_col2", "Column 2:", choices = NULL),
+          actionButton("apply_math_feature", "Create Math Feature", class = "btn-primary")
+        ),
+        conditionalPanel(
+          condition = "input.fe_action == 'bin'",
+          selectInput("fe_bin_col", "Numeric Column to Bin:", choices = NULL),
+          numericInput("fe_bin_k", "Number of Bins:", value = 4, min = 2, max = 20),
+          textInput("fe_bin_new_col", "New Binned Column Name:", "binned_feature"),
+          actionButton("apply_bin_feature", "Create Binned Feature", class = "btn-primary")
+        ),
+        conditionalPanel(
+          condition = "input.fe_action == 'interaction'",
+          textInput("fe_inter_new_col", "New Interaction Column Name:", "interaction_feature"),
+          selectInput("fe_inter_col1", "Numeric Column 1:", choices = NULL),
+          selectInput("fe_inter_col2", "Numeric Column 2:", choices = NULL),
+          actionButton("apply_interaction_feature", "Create Interaction Feature", class = "btn-primary")
+        ),
+        conditionalPanel(
+          condition = "input.fe_action == 'rename'",
+          selectInput("fe_rename_old", "Column to Rename:", choices = NULL),
+          textInput("fe_rename_new", "New Column Name:", ""),
+          actionButton("apply_rename_column", "Rename Column", class = "btn-primary")
+        ),
+        conditionalPanel(
+          condition = "input.fe_action == 'drop'",
+          selectInput("fe_drop_cols", "Columns to Drop:", choices = NULL, multiple = TRUE),
+          actionButton("apply_drop_columns", "Drop Selected Columns", class = "btn-primary")
+        ),
+        hr(),
+        actionButton("reset_engineering", "Reset to Cleaned Data", icon = icon("rotate-left"))
+      ),
+      mainPanel(
+        fluidRow(
+          column(6, h4("Before"), DTOutput("fe_before_preview")),
+          column(6, h4("After"), DTOutput("fe_after_preview"))
+        ),
+        br(),
+        h4("Engineering Log"),
+        verbatimTextOutput("fe_log")
       )
     )
   ),
-
-  # ============================================================
-  # TAB 5: EDA (Students 3 & 4)
-  # Access the shared dataset via current_data()
-  # ============================================================
+  
   tabPanel(
     "EDA",
     icon = icon("chart-bar"),
-    fluidPage(
-      class = "mt-4",
-      div(class = "placeholder-tab",
-        div(class = "placeholder-icon", icon("chart-bar")),
-        h3("Exploratory Data Analysis"),
-        p("This tab will be implemented by Students 3 & 4."),
-        p("It will include: summary statistics, correlation matrix,
-           interactive plots, and dynamic filtering.")
+    sidebarLayout(
+      sidebarPanel(
+        h4("EDA Controls"),
+        selectInput("eda_columns", "Columns to Include:", choices = NULL, multiple = TRUE),
+        checkboxInput("eda_show_summary", "Show Summary Statistics", TRUE),
+        checkboxInput("eda_show_corr", "Show Correlation Matrix", TRUE)
+      ),
+      mainPanel(
+        conditionalPanel(
+          condition = "input.eda_show_summary == true",
+          h4("Summary Statistics"),
+          DTOutput("eda_summary_table"),
+          br()
+        ),
+        conditionalPanel(
+          condition = "input.eda_show_corr == true",
+          h4("Correlation Matrix"),
+          DTOutput("eda_corr_table"),
+          br(),
+          h4("Correlation Heatmap"),
+          plotOutput("eda_corr_heatmap", height = "500px")
+        )
       )
     )
   )
@@ -595,22 +559,15 @@ ui <- navbarPage(
 # SERVER
 # =============================================================================
 server <- function(input, output, session) {
-
-  # ---- SHARED REACTIVE: current_data() ---------------------------------------
-  # This is the SINGLE SOURCE OF TRUTH for the active dataset.
-  #   Read:   current_data()        (returns a data.frame or NULL)
-  #   Update: current_data(new_df)
-  # All tabs should use current_data() to access the dataset.
-  # --------------------------------------------------------------------------
+  
+  # ---- Shared reactive dataset ------------------------------------------------
   current_data <- reactiveVal(NULL)
-
-  # Track the name of the currently loaded dataset for display
   data_name <- reactiveVal(NULL)
-
-  # ---- DATA LOADING: File upload ---------------------------------------------
+  
+  # ---- Data loading: file upload ---------------------------------------------
   observeEvent(input$file_upload, {
     req(input$file_upload)
-
+    
     tryCatch({
       df <- read_uploaded_file(
         input$file_upload$datapath,
@@ -618,17 +575,14 @@ server <- function(input, output, session) {
       )
       current_data(df)
       data_name(input$file_upload$name)
-
-      # Reset demo selector to avoid confusion
       updateSelectInput(session, "demo_data", selected = "none")
-
+      
       showNotification(
         paste0("Successfully loaded '", input$file_upload$name,
                "' (", nrow(df), " rows, ", ncol(df), " columns)"),
         type = "message", duration = 5
       )
-    },
-    error = function(e) {
+    }, error = function(e) {
       current_data(NULL)
       data_name(NULL)
       showNotification(
@@ -637,16 +591,15 @@ server <- function(input, output, session) {
       )
     })
   })
-
-  # ---- DATA LOADING: Demo dataset --------------------------------------------
+  
+  # ---- Data loading: demo dataset --------------------------------------------
   observeEvent(input$load_demo, {
     req(input$demo_data != "none")
-
+    
     df <- switch(input$demo_data,
-      "mtcars"     = mtcars,
-      "iris"       = iris
-    )
-
+                 "mtcars" = mtcars,
+                 "iris" = iris)
+    
     if (!is.null(df)) {
       current_data(df)
       data_name(input$demo_data)
@@ -657,66 +610,60 @@ server <- function(input, output, session) {
       )
     }
   })
-
-  # ---- DATA LOADING: Status banner -------------------------------------------
+  
+  # ---- Status banner ----------------------------------------------------------
   output$load_status <- renderUI({
     if (is.null(current_data())) {
       div(
         class = "status-banner status-info",
         icon("info-circle"),
-        span("No dataset loaded yet. Upload a file or select a demo dataset
-              from the sidebar to get started.")
+        span("No dataset loaded yet. Upload a file or select a demo dataset from the sidebar to get started.")
       )
     } else {
       div(
         class = "status-banner status-success",
         icon("check-circle"),
         span(paste0("Dataset loaded: ", data_name(),
-               " \u2014 ", nrow(current_data()), " rows, ",
-               ncol(current_data()), " columns"))
+                    " — ", nrow(current_data()), " rows, ",
+                    ncol(current_data()), " columns"))
       )
     }
   })
-
-  # ---- DATA LOADING: Summary panel — value boxes -----------------------------
+  
+  # ---- Summary panel ----------------------------------------------------------
   output$data_summary_panel <- renderUI({
     req(current_data())
     df <- current_data()
-
+    
     num_cols <- sum(sapply(df, is.numeric))
     char_cols <- sum(sapply(df, is.character))
     factor_cols <- sum(sapply(df, is.factor))
     missing <- sum(is.na(df))
-
+    
     tagList(
       hr(),
       h4(icon("chart-pie"), " Summary"),
       div(class = "stat-grid",
-        div(class = "stat-box",
-          span(class = "stat-value", nrow(df)),
-          span(class = "stat-label", "Rows")
-        ),
-        div(class = "stat-box",
-          span(class = "stat-value", ncol(df)),
-          span(class = "stat-label", "Columns")
-        ),
-        div(class = "stat-box",
-          span(class = "stat-value", num_cols),
-          span(class = "stat-label", "Numeric")
-        ),
-        div(class = "stat-box",
-          span(class = "stat-value", char_cols + factor_cols),
-          span(class = "stat-label", "Categorical")
-        ),
-        div(class = "stat-box",
-          span(class = "stat-value", missing),
-          span(class = "stat-label", "Missing")
-        )
+          div(class = "stat-box",
+              span(class = "stat-value", nrow(df)),
+              span(class = "stat-label", "Rows")),
+          div(class = "stat-box",
+              span(class = "stat-value", ncol(df)),
+              span(class = "stat-label", "Columns")),
+          div(class = "stat-box",
+              span(class = "stat-value", num_cols),
+              span(class = "stat-label", "Numeric")),
+          div(class = "stat-box",
+              span(class = "stat-value", char_cols + factor_cols),
+              span(class = "stat-label", "Categorical")),
+          div(class = "stat-box",
+              span(class = "stat-value", missing),
+              span(class = "stat-label", "Missing"))
       )
     )
   })
-
-  # ---- DATA LOADING: Interactive data preview table --------------------------
+  
+  # ---- Data preview -----------------------------------------------------------
   output$data_preview <- renderDT({
     req(current_data())
     datatable(
@@ -724,124 +671,435 @@ server <- function(input, output, session) {
       options = list(
         pageLength = 10,
         scrollX = TRUE,
-        language = list(
-          emptyTable = "No data to display"
-        )
+        language = list(emptyTable = "No data to display")
       ),
       rownames = FALSE,
       filter = "top"
     )
   })
-
-  # ============================================================
-  # DATA CLEANING SERVER LOGIC (Student 2)
-  # Use current_data() to read the active dataset.
-  # Update with current_data(cleaned_df) after cleaning.
-  # ============================================================
-cleaned_data <- reactive({
-
-  req(current_data())
-  df <- current_data()
-
-  # ---- 1. Missing Values ------------------------------------
-  if (!is.null(input$missing_method) && input$missing_method != "None") {
-
-    if (input$missing_method == "Drop") {
-      df <- na.omit(df)
-
-    } else if (input$missing_method == "Mean") {
-      num_cols <- sapply(df, is.numeric)
-      df[num_cols] <- lapply(df[num_cols], function(x) {
-        x[is.na(x)] <- mean(x, na.rm = TRUE)
-        x
-      })
-
-    } else if (input$missing_method == "Median") {
-      num_cols <- sapply(df, is.numeric)
-      df[num_cols] <- lapply(df[num_cols], function(x) {
-        x[is.na(x)] <- median(x, na.rm = TRUE)
-        x
-      })
-
-    } else if (input$missing_method == "Mode") {
-      mode_func <- function(x) {
-        ux <- na.omit(unique(x))
-        ux[which.max(tabulate(match(x, ux)))]
-      }
-      df[] <- lapply(df, function(x) {
-        x[is.na(x)] <- mode_func(x)
-        x
-      })
-    }
-  }
-
-  # ---- 2. Remove Duplicates ---------------------------------
-  if (!is.null(input$remove_dup) && input$remove_dup) {
-    df <- unique(df)
-  }
-
-  # ---- 3. Scaling / Normalization ----------------------------
-  if (!is.null(input$scaling) && input$scaling != "None") {
-    num_cols <- sapply(df, is.numeric)
-
-    if (input$scaling == "Standardize") {
-      df[num_cols] <- scale(df[num_cols])
-
-    } else if (input$scaling == "Normalize") {
-      df[num_cols] <- lapply(df[num_cols], function(x) {
-        (x - min(x, na.rm = TRUE)) / 
-        (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))
-      })
-    }
-  }
-
-  # ---- 4. Encoding ------------------------------------------
-  if (!is.null(input$encoding) && input$encoding != "None") {
-
-    if (input$encoding == "Label") {
-      df[] <- lapply(df, function(x) {
-        if (is.character(x) || is.factor(x)) {
-          as.numeric(as.factor(x))
-        } else {
+  
+  # =============================================================================
+  # DATA CLEANING SERVER LOGIC
+  # =============================================================================
+  cleaned_data <- reactive({
+    req(current_data())
+    df <- current_data()
+    
+    if (!is.null(input$missing_method) && input$missing_method != "None") {
+      if (input$missing_method == "Drop") {
+        df <- na.omit(df)
+        
+      } else if (input$missing_method == "Mean") {
+        num_cols <- sapply(df, is.numeric)
+        df[num_cols] <- lapply(df[num_cols], function(x) {
+          x[is.na(x)] <- mean(x, na.rm = TRUE)
           x
+        })
+        
+      } else if (input$missing_method == "Median") {
+        num_cols <- sapply(df, is.numeric)
+        df[num_cols] <- lapply(df[num_cols], function(x) {
+          x[is.na(x)] <- median(x, na.rm = TRUE)
+          x
+        })
+        
+      } else if (input$missing_method == "Mode") {
+        mode_func <- function(x) {
+          x_non_na <- x[!is.na(x)]
+          if (length(x_non_na) == 0) return(NA)
+          ux <- unique(x_non_na)
+          ux[which.max(tabulate(match(x_non_na, ux)))]
         }
-      })
-
-    } else if (input$encoding == "One-hot") {
-      df <- as.data.frame(model.matrix(~ . - 1, data = df))
+        
+        df[] <- lapply(df, function(x) {
+          fill_value <- mode_func(x)
+          x[is.na(x)] <- fill_value
+          x
+        })
+      }
     }
-  }
-
-  # ---- 5. Outliers ------------------------------------------
-  if (!is.null(input$remove_outliers) && input$remove_outliers) {
-    num_cols <- sapply(df, is.numeric)
-
-    for (col in names(df)[num_cols]) {
-      Q1 <- quantile(df[[col]], 0.25, na.rm = TRUE)
-      Q3 <- quantile(df[[col]], 0.75, na.rm = TRUE)
-      IQR_val <- Q3 - Q1
-
-      df <- df[df[[col]] >= (Q1 - 1.5 * IQR_val) &
-               df[[col]] <= (Q3 + 1.5 * IQR_val), ]
+    
+    if (!is.null(input$remove_dup) && input$remove_dup) {
+      df <- unique(df)
     }
-  }
-
-  return(df)
-})
-
-  # ============================================================
-  # FEATURE ENGINEERING SERVER LOGIC (Student 3)
-  # Use current_data() to read the active dataset.
-  # Update with current_data(engineered_df) after transformations.
-  # ============================================================
-
-
-  # ============================================================
-  # EDA SERVER LOGIC (Students 3 & 4)
-  # Use current_data() to read the active dataset.
-  # ============================================================
-
+    
+    if (!is.null(input$scaling) && input$scaling != "None") {
+      num_cols <- sapply(df, is.numeric)
+      
+      if (any(num_cols)) {
+        if (input$scaling == "Standardize") {
+          scaled <- scale(df[num_cols])
+          df[num_cols] <- as.data.frame(scaled)
+          
+        } else if (input$scaling == "Normalize") {
+          df[num_cols] <- lapply(df[num_cols], function(x) {
+            rng <- max(x, na.rm = TRUE) - min(x, na.rm = TRUE)
+            if (is.na(rng) || rng == 0) {
+              rep(0, length(x))
+            } else {
+              (x - min(x, na.rm = TRUE)) / rng
+            }
+          })
+        }
+      }
+    }
+    
+    if (!is.null(input$encoding) && input$encoding != "None") {
+      if (input$encoding == "Label") {
+        df[] <- lapply(df, function(x) {
+          if (is.character(x) || is.factor(x)) {
+            as.numeric(as.factor(x))
+          } else {
+            x
+          }
+        })
+        
+      } else if (input$encoding == "One-hot") {
+        df[] <- lapply(df, function(x) {
+          if (is.character(x)) as.factor(x) else x
+        })
+        df <- as.data.frame(model.matrix(~ . - 1, data = df))
+      }
+    }
+    
+    if (!is.null(input$remove_outliers) && input$remove_outliers) {
+      num_cols <- sapply(df, is.numeric)
+      
+      for (col in names(df)[num_cols]) {
+        Q1 <- quantile(df[[col]], 0.25, na.rm = TRUE)
+        Q3 <- quantile(df[[col]], 0.75, na.rm = TRUE)
+        IQR_val <- Q3 - Q1
+        
+        if (!is.na(IQR_val) && IQR_val > 0) {
+          lower <- Q1 - 1.5 * IQR_val
+          upper <- Q3 + 1.5 * IQR_val
+          keep <- is.na(df[[col]]) | (df[[col]] >= lower & df[[col]] <= upper)
+          df <- df[keep, , drop = FALSE]
+        }
+      }
+    }
+    
+    df
+  })
+  
+  output$cleaned_preview <- renderDT({
+    req(cleaned_data())
+    datatable(
+      cleaned_data(),
+      options = list(pageLength = 10, scrollX = TRUE),
+      rownames = FALSE,
+      filter = "top"
+    )
+  })
+  
+  # =============================================================================
+  # FEATURE ENGINEERING SERVER LOGIC
+  # =============================================================================
+  engineered_data <- reactiveVal(NULL)
+  fe_log <- reactiveVal("No feature engineering actions applied yet.")
+  
+  observe({
+    req(cleaned_data())
+    engineered_data(cleaned_data())
+  })
+  
+  observe({
+    req(engineered_data())
+    df <- engineered_data()
+    
+    all_cols <- names(df)
+    numeric_cols <- names(df)[sapply(df, is.numeric)]
+    
+    updateSelectInput(session, "fe_math_col1", choices = numeric_cols)
+    updateSelectInput(session, "fe_math_col2", choices = numeric_cols)
+    
+    updateSelectInput(session, "fe_bin_col", choices = numeric_cols)
+    
+    updateSelectInput(session, "fe_inter_col1", choices = numeric_cols)
+    updateSelectInput(session, "fe_inter_col2", choices = numeric_cols)
+    
+    updateSelectInput(session, "fe_rename_old", choices = all_cols)
+    updateSelectInput(session, "fe_drop_cols", choices = all_cols)
+    
+    updateSelectInput(session, "eda_columns", choices = all_cols, selected = all_cols)
+  })
+  
+  observeEvent(input$reset_engineering, {
+    req(cleaned_data())
+    engineered_data(cleaned_data())
+    fe_log("Reset feature-engineered dataset back to cleaned data.")
+    showNotification("Feature engineering reset to cleaned data.", type = "message")
+  })
+  
+  observeEvent(input$apply_math_feature, {
+    req(engineered_data(), input$fe_new_col_math, input$fe_math_col1, input$fe_math_col2)
+    
+    df <- engineered_data()
+    new_col <- trimws(input$fe_new_col_math)
+    
+    if (new_col == "") {
+      showNotification("Please provide a new column name.", type = "error")
+      return()
+    }
+    
+    if (new_col %in% names(df)) {
+      showNotification("New column name already exists.", type = "error")
+      return()
+    }
+    
+    x <- df[[input$fe_math_col1]]
+    y <- df[[input$fe_math_col2]]
+    
+    df[[new_col]] <- switch(
+      input$fe_math_operator,
+      "+" = x + y,
+      "-" = x - y,
+      "*" = x * y,
+      "/" = ifelse(y == 0, NA, x / y)
+    )
+    
+    engineered_data(df)
+    fe_log(paste0("Created math feature '", new_col, "' using ",
+                  input$fe_math_col1, " ", input$fe_math_operator, " ", input$fe_math_col2, "."))
+    showNotification(paste("Created new feature:", new_col), type = "message")
+  })
+  
+  observeEvent(input$apply_bin_feature, {
+    req(engineered_data(), input$fe_bin_col, input$fe_bin_new_col)
+    
+    df <- engineered_data()
+    new_col <- trimws(input$fe_bin_new_col)
+    
+    if (new_col == "") {
+      showNotification("Please provide a new column name.", type = "error")
+      return()
+    }
+    
+    if (new_col %in% names(df)) {
+      showNotification("New column name already exists.", type = "error")
+      return()
+    }
+    
+    if (!is.numeric(df[[input$fe_bin_col]])) {
+      showNotification("Selected column must be numeric.", type = "error")
+      return()
+    }
+    
+    breaks <- unique(quantile(
+      df[[input$fe_bin_col]],
+      probs = seq(0, 1, length.out = input$fe_bin_k + 1),
+      na.rm = TRUE
+    ))
+    
+    if (length(breaks) <= 2) {
+      showNotification("Not enough unique values to create bins.", type = "error")
+      return()
+    }
+    
+    df[[new_col]] <- cut(
+      df[[input$fe_bin_col]],
+      breaks = breaks,
+      include.lowest = TRUE,
+      dig.lab = 8
+    )
+    
+    engineered_data(df)
+    fe_log(paste0("Created binned feature '", new_col, "' from column '",
+                  input$fe_bin_col, "' with ", input$fe_bin_k, " bins."))
+    showNotification(paste("Created binned feature:", new_col), type = "message")
+  })
+  
+  observeEvent(input$apply_interaction_feature, {
+    req(engineered_data(), input$fe_inter_col1, input$fe_inter_col2, input$fe_inter_new_col)
+    
+    df <- engineered_data()
+    new_col <- trimws(input$fe_inter_new_col)
+    
+    if (new_col == "") {
+      showNotification("Please provide a new column name.", type = "error")
+      return()
+    }
+    
+    if (new_col %in% names(df)) {
+      showNotification("New column name already exists.", type = "error")
+      return()
+    }
+    
+    df[[new_col]] <- df[[input$fe_inter_col1]] * df[[input$fe_inter_col2]]
+    
+    engineered_data(df)
+    fe_log(paste0("Created interaction feature '", new_col, "' using ",
+                  input$fe_inter_col1, " * ", input$fe_inter_col2, "."))
+    showNotification(paste("Created interaction feature:", new_col), type = "message")
+  })
+  
+  observeEvent(input$apply_rename_column, {
+    req(engineered_data(), input$fe_rename_old, input$fe_rename_new)
+    
+    df <- engineered_data()
+    new_name <- trimws(input$fe_rename_new)
+    
+    if (new_name == "") {
+      showNotification("Please provide a new column name.", type = "error")
+      return()
+    }
+    
+    if (new_name %in% names(df)) {
+      showNotification("New column name already exists.", type = "error")
+      return()
+    }
+    
+    names(df)[names(df) == input$fe_rename_old] <- new_name
+    engineered_data(df)
+    
+    fe_log(paste0("Renamed column '", input$fe_rename_old, "' to '", new_name, "'."))
+    showNotification(paste("Renamed", input$fe_rename_old, "to", new_name), type = "message")
+  })
+  
+  observeEvent(input$apply_drop_columns, {
+    req(engineered_data())
+    
+    df <- engineered_data()
+    
+    if (is.null(input$fe_drop_cols) || length(input$fe_drop_cols) == 0) {
+      showNotification("Please select at least one column to drop.", type = "error")
+      return()
+    }
+    
+    if (length(input$fe_drop_cols) >= ncol(df)) {
+      showNotification("Cannot drop all columns.", type = "error")
+      return()
+    }
+    
+    df <- df[, !(names(df) %in% input$fe_drop_cols), drop = FALSE]
+    engineered_data(df)
+    
+    fe_log(paste0("Dropped column(s): ", paste(input$fe_drop_cols, collapse = ", "), "."))
+    showNotification("Selected columns dropped.", type = "warning")
+  })
+  
+  output$fe_before_preview <- renderDT({
+    req(cleaned_data())
+    datatable(cleaned_data(), options = list(pageLength = 8, scrollX = TRUE), rownames = FALSE)
+  })
+  
+  output$fe_after_preview <- renderDT({
+    req(engineered_data())
+    datatable(engineered_data(), options = list(pageLength = 8, scrollX = TRUE), rownames = FALSE)
+  })
+  
+  output$fe_log <- renderText({
+    fe_log()
+  })
+  
+  # =============================================================================
+  # EDA SERVER LOGIC
+  # =============================================================================
+  eda_data <- reactive({
+    req(engineered_data())
+    df <- engineered_data()
+    
+    if (!is.null(input$eda_columns) && length(input$eda_columns) > 0) {
+      df <- df[, input$eda_columns, drop = FALSE]
+    }
+    
+    df
+  })
+  
+  output$eda_summary_table <- renderDT({
+    req(eda_data())
+    df <- eda_data()
+    
+    summary_df <- data.frame(
+      Column = names(df),
+      Type = sapply(df, function(x) class(x)[1]),
+      Missing = sapply(df, function(x) sum(is.na(x))),
+      Unique_Values = sapply(df, function(x) length(unique(x))),
+      stringsAsFactors = FALSE
+    )
+    
+    numeric_cols <- sapply(df, is.numeric)
+    
+    summary_df$Mean <- NA
+    summary_df$Median <- NA
+    summary_df$SD <- NA
+    summary_df$Min <- NA
+    summary_df$Max <- NA
+    
+    if (any(numeric_cols)) {
+      summary_df$Mean[numeric_cols]   <- sapply(df[numeric_cols], function(x) round(mean(x, na.rm = TRUE), 4))
+      summary_df$Median[numeric_cols] <- sapply(df[numeric_cols], function(x) round(median(x, na.rm = TRUE), 4))
+      summary_df$SD[numeric_cols]     <- sapply(df[numeric_cols], function(x) round(sd(x, na.rm = TRUE), 4))
+      summary_df$Min[numeric_cols]    <- sapply(df[numeric_cols], function(x) round(min(x, na.rm = TRUE), 4))
+      summary_df$Max[numeric_cols]    <- sapply(df[numeric_cols], function(x) round(max(x, na.rm = TRUE), 4))
+    }
+    
+    datatable(summary_df, options = list(pageLength = 10, scrollX = TRUE), rownames = FALSE)
+  })
+  
+  output$eda_corr_table <- renderDT({
+    req(eda_data())
+    df <- eda_data()
+    numeric_df <- df[, sapply(df, is.numeric), drop = FALSE]
+    
+    if (ncol(numeric_df) < 2) {
+      return(
+        datatable(
+          data.frame(
+            Message = "At least two numeric columns are required for a correlation matrix."
+          ),
+          options = list(dom = "t"),
+          rownames = FALSE
+        )
+      )
+    }
+    
+    corr_mat <- round(cor(numeric_df, use = "pairwise.complete.obs"), 4)
+    corr_df <- data.frame(Variable = rownames(corr_mat), corr_mat, check.names = FALSE)
+    
+    datatable(
+      corr_df,
+      options = list(pageLength = 10, scrollX = TRUE),
+      rownames = FALSE
+    )
+  })
+  
+  output$eda_corr_heatmap <- renderPlot({
+    req(eda_data())
+    df <- eda_data()
+    numeric_df <- df[, sapply(df, is.numeric), drop = FALSE]
+    
+    if (ncol(numeric_df) < 2) {
+      plot.new()
+      text(0.5, 0.5, "At least two numeric columns are required for a correlation heatmap.")
+      return()
+    }
+    
+    corr_mat <- cor(numeric_df, use = "pairwise.complete.obs")
+    
+    op <- par(no.readonly = TRUE)
+    on.exit(par(op))
+    par(mar = c(8, 8, 3, 2))
+    
+    image(
+      1:ncol(corr_mat),
+      1:nrow(corr_mat),
+      t(corr_mat[nrow(corr_mat):1, ]),
+      axes = FALSE,
+      xlab = "",
+      ylab = "",
+      main = "Correlation Heatmap"
+    )
+    
+    axis(1, at = 1:ncol(corr_mat), labels = colnames(corr_mat), las = 2)
+    axis(2, at = 1:nrow(corr_mat), labels = rev(rownames(corr_mat)), las = 2)
+    
+    for (i in 1:nrow(corr_mat)) {
+      for (j in 1:ncol(corr_mat)) {
+        text(j, nrow(corr_mat) - i + 1, labels = sprintf("%.2f", corr_mat[i, j]), cex = 0.8)
+      }
+    }
+  })
 }
-
 # ---- Run App -----------------------------------------------------------------
 shinyApp(ui = ui, server = server)
